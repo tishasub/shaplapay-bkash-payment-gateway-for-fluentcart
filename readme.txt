@@ -1,16 +1,19 @@
-=== ShaplaPay bKash Payment Gateway for FluentCart ===
+=== ShaplaPay – bKash Payment Gateway for FluentCart ===
 Contributors: tisha
 Tags: bkash, fluentcart, payment-gateway, bangladesh, mobile-banking
-Requires at least: 6.2
+Requires at least: 6.7
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.2
+Requires Plugins: fluent-cart
+Stable tag: 1.0.3
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Adds bKash as a payment method to FluentCart using the bKash Payment Gateway tokenized checkout API.
+Third-party plugin by ShaplaPay. Accept bKash payments on FluentCart through the bKash Payment Gateway API. Not affiliated with bKash Limited or the FluentCart team.
 
 == Description ==
+
+This is an independent plugin by ShaplaPay. It is not affiliated with, endorsed by, or an official product of bKash Limited or the FluentCart team.
 
 ShaplaPay bKash Payment Gateway lets a FluentCart store in Bangladesh accept payments through bKash, the country's largest mobile financial service. When a customer chooses bKash at checkout, they are sent to the secure bKash hosted page, pay with their wallet, and are brought back to the store with the order marked as paid.
 
@@ -39,10 +42,16 @@ The browser return is never trusted on its own: an order is only marked paid aft
 
 = Requirements =
 
-* FluentCart 1.6 or newer, active on the same site
+WordPress will not activate this plugin unless FluentCart (free) is installed (`Requires Plugins`):
+
+* WordPress 6.7 or later (FluentCart's own minimum)
+* PHP 7.4 or later
+* FluentCart (`fluent-cart`) 1.6 or newer, active on the same site
 * Store currency set to BDT, the only currency bKash accepts
-* A bKash merchant account with Payment Gateway credentials (App Key, App Secret, Username and Password) issued during bKash onboarding
+* A bKash merchant account with Payment Gateway credentials (App Key, App Secret, Username and Password) issued during bKash onboarding, needed for API mode only
 * HTTPS on the store for live payments, because bKash returns the customer to a callback URL on your site
+
+Manual wallet transfer mode needs no bKash API credentials at all, only your bKash wallet number.
 
 = About the bKash service =
 
@@ -95,6 +104,12 @@ No. bKash only settles in Bangladeshi Taka, so the gateway hides itself on store
 On the order screen in FluentCart, in the transaction details and the order activity log. The bKash trxID and the masked wallet number of the payer are stored with the transaction.
 
 == Changelog ==
+
+= 1.0.3 =
+* Adopted the display name "ShaplaPay – bKash Payment Gateway for FluentCart" and added a third-party disclaimer to the plugin and the readme.
+* Requires Plugins now declares `fluent-cart`, and the minimum WordPress version matches FluentCart's own requirement (6.7).
+* Added an uninstall routine that removes the gateway settings, the cached bKash API tokens and any leftover confirmation locks when the plugin is deleted.
+* Added directory assets (banner, icon), a GitHub README, a license file, and GitHub Actions workflows for WordPress.org deployment.
 
 = 1.0.2 =
 * Manual wallet transfer now shows the customer real payment details - the exact amount, your bKash wallet number and the order reference - on the confirmation page. Previously this message was swallowed by the checkout and the customer was redirected without any instructions.

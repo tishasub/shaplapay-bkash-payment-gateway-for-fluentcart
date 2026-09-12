@@ -1,20 +1,22 @@
 <?php
 /**
- * Plugin Name: ShaplaPay bKash Payment Gateway for FluentCart
- * Description: Accepts bKash payments on the FluentCart checkout through the bKash Payment Gateway tokenized checkout API. Redirect based checkout with server side payment execution, order status sync and refunds.
- * Version: 1.0.2
- * Requires at least: 6.2
+ * Plugin Name: ShaplaPay – bKash Payment Gateway for FluentCart
+ * Description: Third-party plugin by ShaplaPay. Accepts bKash payments on the FluentCart checkout through the bKash Payment Gateway tokenized checkout API. Redirect based checkout with server side payment execution, order status sync and refunds. Not affiliated with bKash Limited or the FluentCart team.
+ * Version: 1.0.3
+ * Requires at least: 6.7
  * Requires PHP: 7.4
  * Requires Plugins: fluent-cart
  * Author: Tisha
  * License: GPLv2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: shaplapay-bkash-payment-gateway-for-fluentcart
+ *
+ * @package ShaplaPayBkash
  */
 
 defined('ABSPATH') or die('No direct script access allowed.');
 
-define('SHAPLAPAY_BKASH_VERSION', '1.0.2');
+define('SHAPLAPAY_BKASH_VERSION', '1.0.3');
 define('SHAPLAPAY_BKASH_PATH', plugin_dir_path(__FILE__));
 define('SHAPLAPAY_BKASH_URL', plugin_dir_url(__FILE__));
 define('SHAPLAPAY_BKASH_FILE', __FILE__);
