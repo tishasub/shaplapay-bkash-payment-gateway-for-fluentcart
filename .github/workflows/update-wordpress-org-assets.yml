@@ -1,0 +1,35 @@
+name: Update WordPress.org assets & readme
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'readme.txt'
+      - '.wordpress-org/**'
+  workflow_dispatch:
+
+jobs:
+  update:
+    name: Push asset/readme updates to WordPress.org
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check SVN credentials are configured
+        id: creds
+        env:
+          HAS_SVN_USERNAME: ${{ secrets.SVN_USERNAME != '' }}
+        run: echo "has_creds=$HAS_SVN_USERNAME" >> "$GITHUB_OUTPUT"
+
+      - name: WordPress.org plugin asset/readme update
+        if: steps.creds.outputs.has_creds == 'true'
+        uses: 10up/action-wordpress-plugin-asset-update@stable
+        env:
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+
+      - name: Skipped — SVN credentials not configured
+        if: steps.creds.outputs.has_creds != 'true'
+        run: echo "::notice::SVN_USERNAME / SVN_PASSWORD secrets are not set yet. Add them under Settings → Secrets and variables → Actions to enable WordPress.org asset & readme sync."
