@@ -28,7 +28,7 @@ class Bkash extends AbstractPaymentGateway
     {
         $logo = SHAPLAPAY_BKASH_URL . 'assets/images/bkash-logo.svg';
 
-        return [
+        $meta = [
             'title'              => __('bKash', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
             'route'              => $this->methodSlug,
             'slug'               => $this->methodSlug,
@@ -43,11 +43,24 @@ class Bkash extends AbstractPaymentGateway
             'status'             => $this->settings->get('is_active') === 'yes',
             'supported_features' => $this->supportedFeatures,
         ];
+
+        // A manual transfer only needs the wallet number up front; the amount
+        // and the order reference exist once the order has been placed, so they
+        // are shown on the confirmation page instead. This notice covers the
+        // optional pre-order hint under the bKash option at checkout.
+        if ($this->settings->getIntegrationMode() === 'manual'
+            && $this->settings->getManualNoticePosition() === 'both'
+        ) {
+            $meta['instructions'] = ManualPaymentNotice::buildCheckoutNotice($this->settings);
+        }
+
+        return $meta;
     }
 
     public function boot()
     {
         (new CallbackHandler())->init();
+        (new ManualPaymentNotice())->init();
 
         // Manual transfers are settled outside FluentCart, so refunds against
         // them must be recorded locally instead of calling the bKash API.
@@ -60,6 +73,17 @@ class Bkash extends AbstractPaymentGateway
 
             return $manualRefund;
         }, 10, 2);
+    }
+
+    public function getEnqueueScriptSrc($hasSubscription = 'no'): array
+    {
+        return [
+            [
+                'handle'  => 'shaplapay-bkash-checkout',
+                'src'     => SHAPLAPAY_BKASH_URL . 'assets/js/bkash-checkout.js',
+                'version' => SHAPLAPAY_BKASH_VERSION,
+            ],
+        ];
     }
 
     public function isCurrencySupported(): bool
@@ -257,6 +281,48 @@ class Bkash extends AbstractPaymentGateway
                 'type'        => 'textarea',
                 'placeholder' => __('Send {amount} BDT to bKash wallet {wallet} with reference {reference}.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
                 'tooltip'     => __('Placeholders {wallet}, {amount} and {reference} are replaced per order. Leave empty for the default wording.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'dependency'  => [
+                    'depends_on' => 'integration_mode',
+                    'operator'   => '=',
+                    'value'      => 'manual'
+                ]
+            ],
+            'manual_capture' => [
+                'type'    => 'select',
+                'label'   => __('Payment confirmation', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'value'   => 'reference_only',
+                'options' => [
+                    ['label' => __('I confirm each transfer myself', 'shaplapay-bkash-payment-gateway-for-fluentcart'), 'value' => 'reference_only'],
+                    ['label' => __('Ask the customer for the bKash Transaction ID', 'shaplapay-bkash-payment-gateway-for-fluentcart'), 'value' => 'customer_trx_id'],
+                ],
+                'tooltip' => __('The order always stays pending until you confirm the transfer yourself. Choosing the second option also asks the customer to submit the bKash Transaction ID they received, so you can match it against your bKash app.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'dependency'  => [
+                    'depends_on' => 'integration_mode',
+                    'operator'   => '=',
+                    'value'      => 'manual'
+                ]
+            ],
+            'manual_notice_position' => [
+                'type'    => 'select',
+                'label'   => __('Where to show the payment details', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'value'   => 'thank_you',
+                'options' => [
+                    ['label' => __('On the confirmation page after ordering', 'shaplapay-bkash-payment-gateway-for-fluentcart'), 'value' => 'thank_you'],
+                    ['label' => __('At checkout and on the confirmation page', 'shaplapay-bkash-payment-gateway-for-fluentcart'), 'value' => 'both'],
+                ],
+                'tooltip' => __('The confirmation page always shows the exact amount, your wallet number and the order reference. Choosing the second option also shows a short notice under the bKash option at checkout, before the order is placed.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'dependency'  => [
+                    'depends_on' => 'integration_mode',
+                    'operator'   => '=',
+                    'value'      => 'manual'
+                ]
+            ],
+            'manual_checkout_notice' => [
+                'value'       => '',
+                'label'       => __('Message shown at checkout', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'type'        => 'textarea',
+                'placeholder' => __('Send the money to bKash wallet {wallet} from your bKash app. Your exact amount and payment reference are shown on the next page.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'tooltip'     => __('Used only when "At checkout and on the confirmation page" is selected above. The {wallet} placeholder is replaced with your wallet number.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
                 'dependency'  => [
                     'depends_on' => 'integration_mode',
                     'operator'   => '=',

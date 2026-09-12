@@ -1,10 +1,10 @@
 === ShaplaPay bKash Payment Gateway for FluentCart ===
 Contributors: tisha
 Tags: bkash, fluentcart, payment-gateway, bangladesh, mobile-banking
-Requires at least: 6.0
+Requires at least: 6.2
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.0.0
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,7 +73,14 @@ No. bKash confirms payments through the execute and query APIs, which is the flo
 
 = What if I do not have bKash API credentials yet? =
 
-Set Connection mode to "Manual wallet transfer" in the gateway settings and enter your bKash wallet number. No API keys are needed: the checkout then shows the customer your wallet number with the exact amount and the order reference to quote, the order stays on hold, and you mark it paid from the FluentCart order screen after you see the transfer in your bKash app. When bKash later issues your Payment Gateway credentials, switch the mode back to API. Orders already placed in manual mode keep their manual workflow, including refunds.
+Set Connection mode to "Manual wallet transfer" in the gateway settings and enter your bKash wallet number. No API keys are needed. After the order is placed, the confirmation page shows the customer the exact amount to send, your bKash wallet number and the order reference to quote. The order stays pending, and you mark it paid from the FluentCart order screen after you see the transfer in your bKash app.
+
+Two settings shape that message:
+
+* **Payment confirmation** - "I confirm each transfer myself" only shows the payment details. "Ask the customer for the bKash Transaction ID" also shows a field where the customer enters the bKash Transaction ID they received, which is saved on the order and listed in the bKash report so you can match it against your bKash app. Submitting an ID never marks the order paid.
+* **Where to show the payment details** - the confirmation page always shows them, since that is the first point at which the exact amount and the order reference exist. You can additionally show a short notice under the bKash option at checkout, before the order is placed.
+
+You can also change the wording of the message with the {wallet}, {amount} and {reference} placeholders. When bKash later issues your Payment Gateway credentials, switch the mode back to API. Orders already placed in manual mode keep their manual workflow, including refunds.
 
 = Why can I not refund more than the item total in the refund popup? =
 
@@ -88,6 +95,17 @@ No. bKash only settles in Bangladeshi Taka, so the gateway hides itself on store
 On the order screen in FluentCart, in the transaction details and the order activity log. The bKash trxID and the masked wallet number of the payer are stored with the transaction.
 
 == Changelog ==
+
+= 1.0.2 =
+* Manual wallet transfer now shows the customer real payment details - the exact amount, your bKash wallet number and the order reference - on the confirmation page. Previously this message was swallowed by the checkout and the customer was redirected without any instructions.
+* New setting: ask the customer for the bKash Transaction ID they received, or confirm each transfer yourself. Either way the order stays pending until you confirm it.
+* New setting: show a short payment notice under the bKash option at checkout as well as on the confirmation page.
+* Submitted transaction IDs are recorded on the order, written to the order activity log, and listed in the bKash report for matching against your bKash app.
+
+= 1.0.1 =
+* Fixed the "Place order" button staying disabled when bKash was the selected payment method on first page load.
+* Added a bKash reports screen under the admin menu: collected, pending, failed and refunded totals, a transaction list with bKash trxID, payment ID and payer wallet, manual transfers awaiting confirmation, and recorded refunds.
+* The plugins screens now require WordPress 6.2 or newer.
 
 = 1.0.0 =
 * First release: bKash tokenized checkout for FluentCart with sandbox and live credentials, server side payment confirmation, query fallback, receipt page re-check, refunds and order activity logging, plus a manual wallet transfer mode for stores that do not have bKash API credentials yet.

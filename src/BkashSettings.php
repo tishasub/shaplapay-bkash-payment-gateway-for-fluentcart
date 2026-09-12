@@ -29,10 +29,13 @@ class BkashSettings extends BaseGatewaySettings
     public static function getDefaults(): array
     {
         return [
-            'is_active'            => 'no',
-            'integration_mode'     => 'api',
-            'manual_wallet_number' => '',
-            'manual_instructions'  => '',
+            'is_active'              => 'no',
+            'integration_mode'       => 'api',
+            'manual_wallet_number'   => '',
+            'manual_instructions'    => '',
+            'manual_capture'         => 'reference_only',
+            'manual_notice_position' => 'thank_you',
+            'manual_checkout_notice' => '',
             'test_app_key'    => '',
             'test_app_secret' => '',
             'test_username'   => '',
@@ -67,6 +70,30 @@ class BkashSettings extends BaseGatewaySettings
     public function getManualInstructions(): string
     {
         return (string) $this->get('manual_instructions');
+    }
+
+    /**
+     * How a manual transfer is confirmed: "reference_only" leaves the merchant
+     * to verify each transfer by hand, "customer_trx_id" also asks the customer
+     * to submit the bKash Transaction ID they received.
+     */
+    public function getManualCapture(): string
+    {
+        return $this->get('manual_capture') === 'customer_trx_id' ? 'customer_trx_id' : 'reference_only';
+    }
+
+    /**
+     * "thank_you" shows the payment details on the confirmation page only.
+     * "both" also shows a notice under the bKash option at checkout.
+     */
+    public function getManualNoticePosition(): string
+    {
+        return $this->get('manual_notice_position') === 'both' ? 'both' : 'thank_you';
+    }
+
+    public function getManualCheckoutNotice(): string
+    {
+        return (string) $this->get('manual_checkout_notice');
     }
 
     public function get($key = '')

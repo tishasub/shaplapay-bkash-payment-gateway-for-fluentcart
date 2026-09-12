@@ -155,32 +155,14 @@ class BkashProcessor
             $relatedCart->save();
         }
 
+        // FluentCart only acts on the redirect, so this message is not what the
+        // customer reads - ManualPaymentNotice renders the same wording on the
+        // confirmation page, where the order reference actually exists.
         return [
             'status'      => 'success',
-            'message'     => $this->getManualInstructions($settings, $wallet, $amount, $reference),
+            'message'     => ManualPaymentNotice::buildInstructions($settings, $wallet, $amount, $reference),
             'redirect_to' => $transaction->getSuccessUrl(),
         ];
-    }
-
-    protected function getManualInstructions(BkashSettings $settings, string $wallet, string $amount, string $reference): string
-    {
-        $custom = trim($settings->getManualInstructions());
-
-        if ($custom !== '') {
-            return str_replace(
-                ['{wallet}', '{amount}', '{reference}'],
-                [$wallet, $amount, $reference],
-                $custom
-            );
-        }
-
-        return sprintf(
-            /* translators: 1: amount, 2: wallet number, 3: order reference */
-            __('Send %1$s BDT from your bKash app (Send Money) to wallet %2$s and use reference %3$s. Your order will be confirmed once the transfer is verified.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            $amount,
-            $wallet,
-            $reference
-        );
     }
 
     /**
