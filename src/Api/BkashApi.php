@@ -134,7 +134,7 @@ class BkashApi
         ) {
             return new \WP_Error(
                 'bkash_missing_credentials',
-                __('bKash API credentials are not configured. Please set App Key, App Secret, Username and Password for the current store mode.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                __('bKash API credentials are not configured. Please set App Key, App Secret, Username and Password for the current store mode.', 'shaplapay-payment-gateway-bkash-fluentcart')
             );
         }
 
@@ -153,7 +153,7 @@ class BkashApi
         if (empty($response['id_token'])) {
             return new \WP_Error(
                 'bkash_token_error',
-                __('bKash did not return an API token. Please verify your credentials.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('bKash did not return an API token. Please verify your credentials.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $response
             );
         }
@@ -238,7 +238,7 @@ class BkashApi
                 'bkash_http_error',
                 sprintf(
                     /* translators: %s: bKash API error message */
-                    __('Could not reach the bKash API: %s', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                    __('Could not reach the bKash API: %s', 'shaplapay-payment-gateway-bkash-fluentcart'),
                     $response->get_error_message()
                 )
             );
@@ -259,7 +259,7 @@ class BkashApi
 
             return new \WP_Error(
                 'bkash_http_401',
-                __('bKash API authorization failed (invalid or expired token).', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('bKash API authorization failed (invalid or expired token).', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $data
             );
         }
@@ -269,7 +269,7 @@ class BkashApi
                 'bkash_http_error',
                 $this->extractErrorMessage($data, sprintf(
                     /* translators: %d: bKash API HTTP status code */
-                    __('bKash API returned HTTP %d.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                    __('bKash API returned HTTP %d.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                     $statusCode
                 )),
                 $data
@@ -302,7 +302,7 @@ class BkashApi
         $message = $data['errorMessage'] ?? ($data['statusMessage'] ?? '');
 
         if ($message === '') {
-            $message = $fallback ?: __('bKash API request failed.', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+            $message = $fallback ?: __('bKash API request failed.', 'shaplapay-payment-gateway-bkash-fluentcart');
         }
 
         return $message;

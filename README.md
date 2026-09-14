@@ -1,6 +1,6 @@
-# ShaplaPay – bKash Payment Gateway for FluentCart
+# ShaplaPay Payment Gateway with bKash for FluentCart
 
-![ShaplaPay – bKash Payment Gateway for FluentCart](.wordpress-org/banner-1544x500.png)
+![ShaplaPay Payment Gateway with bKash for FluentCart](.wordpress-org/banner-1544x500.png)
 
 **ShaplaPay** is an independent WordPress plugin by ShaplaPay. It adds **bKash** as a payment method to [FluentCart](https://wordpress.org/plugins/fluent-cart/), the self-hosted eCommerce plugin, using the bKash Payment Gateway **tokenized checkout** API. Customers pay on bKash's own hosted page, and the payment is confirmed server side before the order is marked paid.
 
@@ -8,9 +8,9 @@ This is a third-party integration. It is not affiliated with, endorsed by, or an
 
 | | |
 |---|---|
-| Display name | ShaplaPay – bKash Payment Gateway for FluentCart |
-| Directory slug | `shaplapay-bkash-payment-gateway-for-fluentcart` |
-| Text domain | `shaplapay-bkash-payment-gateway-for-fluentcart` |
+| Display name | ShaplaPay Payment Gateway with bKash for FluentCart |
+| Directory slug | `shaplapay-payment-gateway-bkash-fluentcart` |
+| Text domain | `shaplapay-payment-gateway-bkash-fluentcart` |
 | Admin menu | bKash (reports screen) |
 | GitHub | [tishasub/shaplapay-bkash-payment-gateway-for-fluentcart](https://github.com/tishasub/shaplapay-bkash-payment-gateway-for-fluentcart) |
 
@@ -62,8 +62,8 @@ The message wording is editable with `{wallet}`, `{amount}` and `{reference}` pl
 
 ## Install
 
-1. Copy the `shaplapay-bkash-payment-gateway-for-fluentcart` folder into `wp-content/plugins/`, or install the ZIP through **Plugins → Add New → Upload Plugin**.
-2. Activate **ShaplaPay – bKash Payment Gateway for FluentCart**.
+1. Copy the `shaplapay-payment-gateway-bkash-fluentcart` folder into `wp-content/plugins/`, or install the ZIP through **Plugins → Add New → Upload Plugin**.
+2. Activate **ShaplaPay Payment Gateway with bKash for FluentCart**.
 3. Open **FluentCart → Settings → Payments** and select bKash.
 4. Enter the App Key, App Secret, Username and Password issued by bKash, then save. The plugin verifies them with bKash before enabling the gateway.
 
@@ -72,7 +72,7 @@ Sandbox credentials are published by bKash at [developer.bka.sh](https://develop
 ## Plugin structure
 
 ```
-shaplapay-bkash-payment-gateway-for-fluentcart.php
+shaplapay-payment-gateway-bkash-fluentcart.php
 uninstall.php
 src/
   Bkash.php                  gateway + settings fields
@@ -83,13 +83,15 @@ src/
   Api/BkashApi.php           bKash HTTP client
   Admin/BkashReport.php      reports screen
 assets/
+  css/admin-report.css       reports screen styles (enqueued)
+  css/manual-notice.css      confirmation page notice styles (enqueued)
   js/bkash-checkout.js       enables the Place Order button at checkout
-  images/bkash-logo.svg
+  images/bkash-label.svg     plain text label (not bKash's logo)
 .github/workflows/           WordPress.org deploy + asset sync
 .wordpress-org/              banner and icon assets
 ```
 
-PHP prefix: `ShaplaPayBkash`. Constants: `SHAPLAPAY_BKASH_*`. Text domain: `shaplapay-bkash-payment-gateway-for-fluentcart`.
+PHP prefix: `ShaplaPayBkash`. Constants: `SHAPLAPAY_BKASH_*`. Text domain: `shaplapay-payment-gateway-bkash-fluentcart`.
 
 ## Directory assets
 
@@ -107,7 +109,7 @@ PHP prefix: `ShaplaPayBkash`. Constants: `SHAPLAPAY_BKASH_*`. Text domain: `shap
 
 The version lives in two places and both must match: the `Version:` plugin header and `Stable tag:` in `readme.txt`.
 
-- Pushing a tag (`1.0.3`) runs `.github/workflows/deploy-to-wordpress-org.yml`, which lints the PHP, assembles a clean build using `.distignore`, and deploys it to WordPress.org SVN.
+- Pushing a tag (`1.0.4`) runs `.github/workflows/deploy-to-wordpress-org.yml`, which lints the PHP, assembles a clean build using `.distignore`, and deploys it to WordPress.org SVN.
 - Pushing to `main` with changes to `readme.txt` or `.wordpress-org/**` runs `.github/workflows/update-wordpress-org-assets.yml` to sync the listing assets.
 
 Both workflows skip deployment and print a notice until `SVN_USERNAME` and `SVN_PASSWORD` are set under **Settings → Secrets and variables → Actions**.

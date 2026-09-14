@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 168 48" width="168" height="48" role="img" aria-label="bKash">
-  <rect x="0" y="0" width="168" height="48" rx="10" fill="#E2136E"/>
-  <text x="20" y="33" font-family="Arial, Helvetica, sans-serif" font-size="26" font-weight="700" fill="#ffffff">bKash</text>
-  <circle cx="140" cy="24" r="10" fill="#ffffff"/>
-  <path d="M135.5 24.5l3 3 6-6.5" stroke="#E2136E" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-</svg>

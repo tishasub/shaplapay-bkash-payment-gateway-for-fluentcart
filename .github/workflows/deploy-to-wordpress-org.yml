@@ -13,7 +13,7 @@ on:
         default: true
 
 env:
-  SLUG: shaplapay-bkash-payment-gateway-for-fluentcart
+  SLUG: shaplapay-payment-gateway-bkash-fluentcart
 
 jobs:
   build:

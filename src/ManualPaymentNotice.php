@@ -2,6 +2,7 @@
 
 namespace ShaplaPayBkash;
 
+use FluentCart\Api\StoreSettings;
 use FluentCart\App\Helpers\Helper;
 use FluentCart\App\Helpers\Status;
 use FluentCart\App\Models\OrderTransaction;
@@ -27,6 +28,7 @@ class ManualPaymentNotice
 
     public function init(): void
     {
+        add_action('wp_enqueue_scripts', [$this, 'enqueueAssets']);
         add_action('fluent_cart/receipt/thank_you/after_order_header', [$this, 'renderNotice']);
         add_action('fluent_cart_action_' . self::ROUTE, [$this, 'handleSubmission']);
     }
@@ -41,7 +43,7 @@ class ManualPaymentNotice
         $notice = trim($settings->getManualCheckoutNotice());
 
         if ($notice === '') {
-            $notice = __('Send the money from your bKash app to wallet {wallet}. Your exact amount and payment reference are shown on the next page.', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+            $notice = __('Send the money from your bKash app to wallet {wallet}. Your exact amount and payment reference are shown on the next page.', 'shaplapay-payment-gateway-bkash-fluentcart');
         }
 
         $notice = str_replace('{wallet}', $settings->getWalletNumber(), $notice);
@@ -68,7 +70,7 @@ class ManualPaymentNotice
         if ($settings->getManualCapture() === 'customer_trx_id') {
             return sprintf(
                 /* translators: 1: amount, 2: wallet number, 3: order reference */
-                __('Send %1$s BDT from your bKash app (Send Money) to wallet %2$s using reference %3$s, then enter the bKash Transaction ID you received so we can verify your payment.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('Send %1$s BDT from your bKash app (Send Money) to wallet %2$s using reference %3$s, then enter the bKash Transaction ID you received so we can verify your payment.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $amount,
                 $wallet,
                 $reference
@@ -77,7 +79,7 @@ class ManualPaymentNotice
 
         return sprintf(
             /* translators: 1: amount, 2: wallet number, 3: order reference */
-            __('Send %1$s BDT from your bKash app (Send Money) to wallet %2$s using reference %3$s. Your order will be confirmed once the transfer is verified.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            __('Send %1$s BDT from your bKash app (Send Money) to wallet %2$s using reference %3$s. Your order will be confirmed once the transfer is verified.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             $amount,
             $wallet,
             $reference
@@ -115,10 +117,9 @@ class ManualPaymentNotice
         $instructions = self::buildInstructions($settings, $wallet, $amount, $reference);
         $flag = $this->submissionFlag();
 
-        $this->renderStyles();
         ?>
         <div class="shaplapay-bkash-manual">
-            <h3><?php echo esc_html__('Complete your bKash payment', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></h3>
+            <h3><?php echo esc_html__('Complete your bKash payment', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></h3>
 
             <?php $this->renderFlag($flag, $submittedTrxId); ?>
 
@@ -127,15 +128,15 @@ class ManualPaymentNotice
             <table class="shaplapay-bkash-manual-details">
                 <tbody>
                     <tr>
-                        <th><?php echo esc_html__('Amount to send', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Amount to send', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                         <td><strong><?php echo wp_kses_post($this->money($transaction->total)); ?></strong></td>
                     </tr>
                     <tr>
-                        <th><?php echo esc_html__('Send to (bKash wallet)', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Send to (bKash wallet)', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                         <td class="shaplapay-bkash-manual-code"><?php echo esc_html($wallet); ?></td>
                     </tr>
                     <tr>
-                        <th><?php echo esc_html__('Reference', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Reference', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                         <td class="shaplapay-bkash-manual-code"><?php echo esc_html($reference); ?></td>
                     </tr>
                 </tbody>
@@ -145,7 +146,7 @@ class ManualPaymentNotice
                 <?php $this->renderTrxForm($transaction, $submittedTrxId); ?>
             <?php else : ?>
                 <p class="shaplapay-bkash-manual-note">
-                    <?php echo esc_html__('We will confirm your order once the transfer is verified.', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?>
+                    <?php echo esc_html__('We will confirm your order once the transfer is verified.', 'shaplapay-payment-gateway-bkash-fluentcart'); ?>
                 </p>
             <?php endif; ?>
         </div>
@@ -163,12 +164,12 @@ class ManualPaymentNotice
             <label for="shaplapay-bkash-trx-id">
                 <?php
                 echo $hasSubmitted
-                    ? esc_html__('Sent a different one? Enter the correct bKash Transaction ID', 'shaplapay-bkash-payment-gateway-for-fluentcart')
-                    : esc_html__('bKash Transaction ID', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+                    ? esc_html__('Sent a different one? Enter the correct bKash Transaction ID', 'shaplapay-payment-gateway-bkash-fluentcart')
+                    : esc_html__('bKash Transaction ID', 'shaplapay-payment-gateway-bkash-fluentcart');
                 ?>
             </label>
             <p class="shaplapay-bkash-manual-hint">
-                <?php echo esc_html__('You will find it in your bKash app or in the confirmation SMS, for example 8N7A1B2C3D.', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?>
+                <?php echo esc_html__('You will find it in your bKash app or in the confirmation SMS, for example 8N7A1B2C3D.', 'shaplapay-payment-gateway-bkash-fluentcart'); ?>
             </p>
             <div class="shaplapay-bkash-manual-form-row">
                 <input
@@ -183,8 +184,8 @@ class ManualPaymentNotice
                 <button type="submit" class="shaplapay-bkash-manual-button">
                     <?php
                     echo $hasSubmitted
-                        ? esc_html__('Update Transaction ID', 'shaplapay-bkash-payment-gateway-for-fluentcart')
-                        : esc_html__('Submit Transaction ID', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+                        ? esc_html__('Update Transaction ID', 'shaplapay-payment-gateway-bkash-fluentcart')
+                        : esc_html__('Submit Transaction ID', 'shaplapay-payment-gateway-bkash-fluentcart');
                     ?>
                 </button>
             </div>
@@ -201,19 +202,19 @@ class ManualPaymentNotice
         $messages = [
             'submitted' => [
                 'type' => 'success',
-                'text' => __('Thanks - we saved your bKash Transaction ID.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'text' => __('Thanks - we saved your bKash Transaction ID.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             ],
             'invalid' => [
                 'type' => 'error',
-                'text' => __('We could not verify that request. Please enter your bKash Transaction ID again.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'text' => __('We could not verify that request. Please enter your bKash Transaction ID again.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             ],
             'format' => [
                 'type' => 'error',
-                'text' => __('That does not look like a bKash Transaction ID. Use the letters and numbers from your bKash app, for example 8N7A1B2C3D.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'text' => __('That does not look like a bKash Transaction ID. Use the letters and numbers from your bKash app, for example 8N7A1B2C3D.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             ],
             'locked' => [
                 'type' => 'error',
-                'text' => __('This order can no longer be updated. Please contact us if something is wrong.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'text' => __('This order can no longer be updated. Please contact us if something is wrong.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             ],
         ];
 
@@ -228,7 +229,7 @@ class ManualPaymentNotice
                 'type' => 'success',
                 'text' => sprintf(
                     /* translators: %s: bKash transaction ID submitted by the customer */
-                    __('We received your bKash Transaction ID: %s', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                    __('We received your bKash Transaction ID: %s', 'shaplapay-payment-gateway-bkash-fluentcart'),
                     $submittedTrxId
                 ),
             ];
@@ -241,34 +242,23 @@ class ManualPaymentNotice
         );
     }
 
-    protected function renderStyles(): void
+    /**
+     * The notice stylesheet is only needed on the order confirmation page.
+     */
+    public function enqueueAssets(): void
     {
-        static $rendered = false;
+        $receiptPageId = (int) (new StoreSettings())->getReceiptPageId();
 
-        if ($rendered) {
+        if ($receiptPageId <= 0 || !is_page($receiptPageId)) {
             return;
         }
 
-        $rendered = true;
-        ?>
-        <style>
-            .shaplapay-bkash-manual { max-width: 620px; margin: 16px auto 0; padding: 16px; border: 1px solid #e2136e33; border-left: 4px solid #e2136e; border-radius: 4px; background: #fff9fc; font-size: 14px; color: #2f3448; }
-            .shaplapay-bkash-manual h3 { margin: 0 0 8px; font-size: 16px; }
-            .shaplapay-bkash-manual p { margin: 0 0 12px; }
-            .shaplapay-bkash-manual-details { width: 100%; border-collapse: collapse; margin: 0 0 12px; }
-            .shaplapay-bkash-manual-details th, .shaplapay-bkash-manual-details td { text-align: left; padding: 6px 0; border-bottom: 1px solid #f0e2ea; vertical-align: top; }
-            .shaplapay-bkash-manual-details th { font-weight: 600; width: 45%; }
-            .shaplapay-bkash-manual-code { font-family: Menlo, Consolas, monospace; word-break: break-all; }
-            .shaplapay-bkash-manual-flag { padding: 8px 12px; border-radius: 4px; margin: 0 0 12px; }
-            .shaplapay-bkash-manual-flag.is-success { background: #edfaef; color: #008a20; }
-            .shaplapay-bkash-manual-flag.is-error { background: #fcf0f1; color: #d63638; }
-            .shaplapay-bkash-manual-hint { font-size: 13px; color: #646970; margin: 0 0 8px; }
-            .shaplapay-bkash-manual-note { margin: 0; }
-            .shaplapay-bkash-manual-form-row { display: flex; gap: 8px; flex-wrap: wrap; }
-            .shaplapay-bkash-manual-input { flex: 1 1 200px; padding: 8px 10px; border: 1px solid #c3c4c7; border-radius: 4px; }
-            .shaplapay-bkash-manual-button { padding: 8px 16px; border: 0; border-radius: 4px; background: #e2136e; color: #fff; cursor: pointer; }
-        </style>
-        <?php
+        wp_enqueue_style(
+            'shaplapay-bkash-manual',
+            SHAPLAPAY_BKASH_URL . 'assets/css/manual-notice.css',
+            [],
+            SHAPLAPAY_BKASH_VERSION
+        );
     }
 
     public function handleSubmission($request): void
@@ -312,10 +302,10 @@ class ManualPaymentNotice
         $transaction->save();
 
         fluent_cart_add_log(
-            __('bKash Transaction ID received', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            __('bKash Transaction ID received', 'shaplapay-payment-gateway-bkash-fluentcart'),
             sprintf(
                 /* translators: %s: bKash transaction ID submitted by the customer */
-                __('The customer submitted bKash Transaction ID %s. Verify the transfer and confirm the order.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('The customer submitted bKash Transaction ID %s. Verify the transfer and confirm the order.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $trxId
             ),
             'info',

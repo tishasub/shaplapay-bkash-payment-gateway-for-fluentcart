@@ -1,0 +1,27 @@
+/**
+ * ShaplaPay Payment Gateway with bKash for FluentCart
+ * Styles for the bKash reports screen.
+ */
+
+.shaplapay-bkash-report .sb-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
+.shaplapay-bkash-report .sb-card { background: #fff; border: 1px solid #dcdcde; border-left-width: 4px; border-radius: 4px; padding: 12px 16px; }
+.shaplapay-bkash-report .sb-card-label { display: block; color: #646970; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.shaplapay-bkash-report .sb-card-value { display: block; font-size: 20px; font-weight: 600; margin-top: 4px; }
+.shaplapay-bkash-report .sb-card-collected { border-left-color: #008a20; }
+.shaplapay-bkash-report .sb-card-pending { border-left-color: #dba617; }
+.shaplapay-bkash-report .sb-card-failed { border-left-color: #d63638; }
+.shaplapay-bkash-report .sb-card-refunded { border-left-color: #2271b1; }
+.shaplapay-bkash-report .sb-card-count { border-left-color: #8c8f94; }
+.shaplapay-bkash-report .sb-status { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #f0f0f1; color: #3c434a; }
+.shaplapay-bkash-report .sb-status-succeeded { background: #edfaef; color: #008a20; }
+.shaplapay-bkash-report .sb-status-pending { background: #fcf9e8; color: #8a6a00; }
+.shaplapay-bkash-report .sb-status-failed { background: #fcf0f1; color: #d63638; }
+.shaplapay-bkash-report .sb-status-refunded { background: #eef5fb; color: #2271b1; }
+.shaplapay-bkash-report .sb-panel { background: #fff; border: 1px solid #dcdcde; border-radius: 4px; padding: 4px 16px 16px; margin: 20px 0; }
+.shaplapay-bkash-report .sb-panel-warning { border-left: 4px solid #dba617; }
+.shaplapay-bkash-report .sb-muted { color: #646970; }
+.shaplapay-bkash-report .sb-mono { font-family: Menlo, Consolas, monospace; font-size: 12px; }
+.shaplapay-bkash-report .sb-range-note { color: #646970; margin: 0 0 8px; }
+.shaplapay-bkash-report .sb-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 12px 0 4px; }
+.shaplapay-bkash-report .sb-filters label { display: block; font-weight: 600; margin-bottom: 2px; }
+.shaplapay-bkash-report .sb-empty { color: #646970; font-style: italic; }

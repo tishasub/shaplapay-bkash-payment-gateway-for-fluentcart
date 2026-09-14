@@ -16,16 +16,14 @@ delete_option('fluent_cart_payment_settings_bkash');
 delete_option('shaplapay_bkash_token_test');
 delete_option('shaplapay_bkash_token_live');
 
-global $wpdb;
-
-// phpcs:ignore WordPress.DB.DirectDatabaseQuery.DirectQuery, WordPress.DB.DirectDatabaseQuery.NoCaching, WordPress.DB.PreparedSQL.InterpolatedNotPrepared, PluginCheck.Security.DirectDB.UnescapedDBParameter -- One-off cleanup of this plugin's own lock options on uninstall; the table name is a WordPress core identifier and the pattern is bound through $wpdb->prepare().
-$lockNames = $wpdb->get_col(
-    $wpdb->prepare(
-        "SELECT option_name FROM {$wpdb->options} WHERE option_name LIKE %s",
-        $wpdb->esc_like('shaplapay_bkash_confirm_lock_') . '%'
-    )
-);
-
-foreach ((array) $lockNames as $lockName) {
-    delete_option($lockName);
+// Leftover confirmation locks are listed in this index option, so they can
+// be removed through the Options API with no direct SQL.
+foreach ((array) get_option('shaplapay_bkash_confirm_locks', []) as $shaplaPayBkashLockName) {
+    // phpcs:disable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound -- Short alphabetic option name from this plugin's own index, never output, a URL or a translatable string.
+    if (is_string($shaplaPayBkashLockName) && strpos($shaplaPayBkashLockName, 'shaplapay_bkash_confirm_lock_') === 0) {
+        delete_option($shaplaPayBkashLockName);
+    }
+    // phpcs:enable WordPress.NamingConventions.PrefixAllGlobals.NonPrefixedVariableFound
 }
+
+delete_option('shaplapay_bkash_confirm_locks');

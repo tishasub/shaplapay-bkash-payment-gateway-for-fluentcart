@@ -2,6 +2,7 @@
 
 namespace ShaplaPayBkash\Admin;
 
+use ShaplaPayBkash\BkashProcessor;
 use FluentCart\App\Helpers\Helper;
 
 /**
@@ -33,13 +34,14 @@ class BkashReport
     public function register(): void
     {
         add_action('admin_menu', [$this, 'addMenuPage']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueueAssets']);
     }
 
     public function addMenuPage(): void
     {
         add_menu_page(
-            __('bKash Reports', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            __('bKash', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            __('bKash Reports', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            __('bKash', 'shaplapay-payment-gateway-bkash-fluentcart'),
             self::CAPABILITY,
             self::MENU_SLUG,
             [$this, 'renderPage'],
@@ -51,19 +53,19 @@ class BkashReport
     protected static function statusLabels(): array
     {
         return [
-            'succeeded'    => __('Paid', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            'pending'      => __('Pending', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            'failed'       => __('Failed', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            'refunded'     => __('Refunded', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            'authorized'   => __('Authorized', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-            'dispute_lost' => __('Disputed', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            'succeeded'    => __('Paid', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            'pending'      => __('Pending', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            'failed'       => __('Failed', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            'refunded'     => __('Refunded', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            'authorized'   => __('Authorized', 'shaplapay-payment-gateway-bkash-fluentcart'),
+            'dispute_lost' => __('Disputed', 'shaplapay-payment-gateway-bkash-fluentcart'),
         ];
     }
 
     public function renderPage(): void
     {
         if (!current_user_can(self::CAPABILITY)) {
-            wp_die(esc_html__('You do not have permission to view this report.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+            wp_die(esc_html__('You do not have permission to view this report.', 'shaplapay-payment-gateway-bkash-fluentcart'));
         }
 
         global $wpdb;
@@ -76,8 +78,8 @@ class BkashReport
         if ($foundTable !== $trxTable) {
             printf(
                 '<div class="wrap"><h1>%s</h1><div class="notice notice-error"><p>%s</p></div></div>',
-                esc_html__('bKash Reports', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-                esc_html__('The FluentCart tables were not found. Install and activate FluentCart to use this report.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                esc_html__('bKash Reports', 'shaplapay-payment-gateway-bkash-fluentcart'),
+                esc_html__('The FluentCart tables were not found. Install and activate FluentCart to use this report.', 'shaplapay-payment-gateway-bkash-fluentcart')
             );
 
             return;
@@ -90,20 +92,19 @@ class BkashReport
         $manualPending = $this->getManualPending();
         $refunds = $this->getRefunds($filters);
 
-        $this->renderStyles();
         ?>
         <div class="wrap shaplapay-bkash-report">
-            <h1><?php echo esc_html__('bKash Reports', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></h1>
+            <h1><?php echo esc_html__('bKash Reports', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></h1>
 
             <?php $this->renderFilters($filters); ?>
 
             <div class="sb-cards">
                 <?php
-                $this->renderCard(__('Collected', 'shaplapay-bkash-payment-gateway-for-fluentcart'), $this->money($totals['collected']), 'sb-card-collected');
-                $this->renderCard(__('Pending', 'shaplapay-bkash-payment-gateway-for-fluentcart'), $this->money($totals['pending']), 'sb-card-pending');
-                $this->renderCard(__('Failed', 'shaplapay-bkash-payment-gateway-for-fluentcart'), $this->money($totals['failed']), 'sb-card-failed');
-                $this->renderCard(__('Refunded', 'shaplapay-bkash-payment-gateway-for-fluentcart'), $this->money($totals['refunded']), 'sb-card-refunded');
-                $this->renderCard(__('Transactions', 'shaplapay-bkash-payment-gateway-for-fluentcart'), number_format_i18n($totals['count']), 'sb-card-count');
+                $this->renderCard(__('Collected', 'shaplapay-payment-gateway-bkash-fluentcart'), $this->money($totals['collected']), 'sb-card-collected');
+                $this->renderCard(__('Pending', 'shaplapay-payment-gateway-bkash-fluentcart'), $this->money($totals['pending']), 'sb-card-pending');
+                $this->renderCard(__('Failed', 'shaplapay-payment-gateway-bkash-fluentcart'), $this->money($totals['failed']), 'sb-card-failed');
+                $this->renderCard(__('Refunded', 'shaplapay-payment-gateway-bkash-fluentcart'), $this->money($totals['refunded']), 'sb-card-refunded');
+                $this->renderCard(__('Transactions', 'shaplapay-payment-gateway-bkash-fluentcart'), number_format_i18n($totals['count']), 'sb-card-count');
                 ?>
             </div>
 
@@ -116,34 +117,22 @@ class BkashReport
         <?php
     }
 
-    protected function renderStyles(): void
+    /**
+     * The report stylesheet only loads on this plugin's own screen, so no
+     * other admin page pays for it.
+     */
+    public function enqueueAssets(string $hookSuffix): void
     {
-        ?>
-        <style>
-            .shaplapay-bkash-report .sb-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin: 16px 0; }
-            .shaplapay-bkash-report .sb-card { background: #fff; border: 1px solid #dcdcde; border-left-width: 4px; border-radius: 4px; padding: 12px 16px; }
-            .shaplapay-bkash-report .sb-card-label { display: block; color: #646970; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
-            .shaplapay-bkash-report .sb-card-value { display: block; font-size: 20px; font-weight: 600; margin-top: 4px; }
-            .shaplapay-bkash-report .sb-card-collected { border-left-color: #008a20; }
-            .shaplapay-bkash-report .sb-card-pending { border-left-color: #dba617; }
-            .shaplapay-bkash-report .sb-card-failed { border-left-color: #d63638; }
-            .shaplapay-bkash-report .sb-card-refunded { border-left-color: #2271b1; }
-            .shaplapay-bkash-report .sb-card-count { border-left-color: #8c8f94; }
-            .shaplapay-bkash-report .sb-status { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 12px; background: #f0f0f1; color: #3c434a; }
-            .shaplapay-bkash-report .sb-status-succeeded { background: #edfaef; color: #008a20; }
-            .shaplapay-bkash-report .sb-status-pending { background: #fcf9e8; color: #8a6a00; }
-            .shaplapay-bkash-report .sb-status-failed { background: #fcf0f1; color: #d63638; }
-            .shaplapay-bkash-report .sb-status-refunded { background: #eef5fb; color: #2271b1; }
-            .shaplapay-bkash-report .sb-panel { background: #fff; border: 1px solid #dcdcde; border-radius: 4px; padding: 4px 16px 16px; margin: 20px 0; }
-            .shaplapay-bkash-report .sb-panel-warning { border-left: 4px solid #dba617; }
-            .shaplapay-bkash-report .sb-muted { color: #646970; }
-            .shaplapay-bkash-report .sb-mono { font-family: Menlo, Consolas, monospace; font-size: 12px; }
-            .shaplapay-bkash-report .sb-range-note { color: #646970; margin: 0 0 8px; }
-            .shaplapay-bkash-report .sb-filters { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; margin: 12px 0 4px; }
-            .shaplapay-bkash-report .sb-filters label { display: block; font-weight: 600; margin-bottom: 2px; }
-            .shaplapay-bkash-report .sb-empty { color: #646970; font-style: italic; }
-        </style>
-        <?php
+        if ($hookSuffix !== 'toplevel_page_' . self::MENU_SLUG) {
+            return;
+        }
+
+        wp_enqueue_style(
+            'shaplapay-bkash-report',
+            SHAPLAPAY_BKASH_URL . 'assets/css/admin-report.css',
+            [],
+            SHAPLAPAY_BKASH_VERSION
+        );
     }
 
     protected function renderCard(string $label, string $value, string $class): void
@@ -162,17 +151,17 @@ class BkashReport
         <form method="get" class="sb-filters">
             <input type="hidden" name="page" value="<?php echo esc_attr(self::MENU_SLUG); ?>" />
             <div>
-                <label for="sb-date-from"><?php echo esc_html__('From', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></label>
+                <label for="sb-date-from"><?php echo esc_html__('From', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></label>
                 <input type="date" id="sb-date-from" name="date_from" value="<?php echo esc_attr($filters['raw_from']); ?>" />
             </div>
             <div>
-                <label for="sb-date-to"><?php echo esc_html__('To', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></label>
+                <label for="sb-date-to"><?php echo esc_html__('To', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></label>
                 <input type="date" id="sb-date-to" name="date_to" value="<?php echo esc_attr($filters['raw_to']); ?>" />
             </div>
             <div>
-                <label for="sb-status"><?php echo esc_html__('Status', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></label>
+                <label for="sb-status"><?php echo esc_html__('Status', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></label>
                 <select id="sb-status" name="status">
-                    <option value=""><?php echo esc_html__('All statuses', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></option>
+                    <option value=""><?php echo esc_html__('All statuses', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></option>
                     <?php foreach (self::statusLabels() as $value => $label) : ?>
                         <option value="<?php echo esc_attr($value); ?>" <?php selected($filters['status'], $value); ?>>
                             <?php echo esc_html($label); ?>
@@ -181,16 +170,16 @@ class BkashReport
                 </select>
             </div>
             <div>
-                <label for="sb-mode"><?php echo esc_html__('Store mode', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></label>
+                <label for="sb-mode"><?php echo esc_html__('Store mode', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></label>
                 <select id="sb-mode" name="payment_mode">
-                    <option value=""><?php echo esc_html__('Test and live', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></option>
-                    <option value="live" <?php selected($filters['mode'], 'live'); ?>><?php echo esc_html__('Live', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></option>
-                    <option value="test" <?php selected($filters['mode'], 'test'); ?>><?php echo esc_html__('Test', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></option>
+                    <option value=""><?php echo esc_html__('Test and live', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></option>
+                    <option value="live" <?php selected($filters['mode'], 'live'); ?>><?php echo esc_html__('Live', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></option>
+                    <option value="test" <?php selected($filters['mode'], 'test'); ?>><?php echo esc_html__('Test', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></option>
                 </select>
             </div>
             <div>
-                <?php submit_button(__('Filter', 'shaplapay-bkash-payment-gateway-for-fluentcart'), 'secondary', 'filter', false); ?>
-                <a class="button button-link" href="<?php echo esc_url(admin_url('admin.php?page=' . self::MENU_SLUG)); ?>"><?php echo esc_html__('Reset', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></a>
+                <?php submit_button(__('Filter', 'shaplapay-payment-gateway-bkash-fluentcart'), 'secondary', 'filter', false); ?>
+                <a class="button button-link" href="<?php echo esc_url(admin_url('admin.php?page=' . self::MENU_SLUG)); ?>"><?php echo esc_html__('Reset', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></a>
             </div>
         </form>
         <?php
@@ -203,18 +192,18 @@ class BkashReport
         }
         ?>
         <div class="sb-panel sb-panel-warning">
-            <h2><?php echo esc_html__('Manual transfers awaiting confirmation', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></h2>
-            <p class="sb-muted"><?php echo esc_html__('These customers were told to send money to your bKash wallet. Confirm each transfer in FluentCart once it appears in your bKash app.', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></p>
+            <h2><?php echo esc_html__('Manual transfers awaiting confirmation', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></h2>
+            <p class="sb-muted"><?php echo esc_html__('These customers were told to send money to your bKash wallet. Confirm each transfer in FluentCart once it appears in your bKash app.', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></p>
             <table class="wp-list-table widefat fixed striped">
                 <thead>
                     <tr>
-                        <th><?php echo esc_html__('Date', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('Order', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('Customer', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('Reference', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('bKash TrxID from customer', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('Amount', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                        <th><?php echo esc_html__('Your wallet', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Date', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Order', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Customer', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Reference', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('bKash TrxID from customer', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Amount', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                        <th><?php echo esc_html__('Your wallet', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -229,11 +218,11 @@ class BkashReport
                                 <?php if ($details['submitted_trx_id'] !== '') : ?>
                                     <?php echo esc_html($details['submitted_trx_id']); ?>
                                 <?php else : ?>
-                                    <span class="sb-muted"><?php echo esc_html__('not provided', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></span>
+                                    <span class="sb-muted"><?php echo esc_html__('not provided', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></span>
                                 <?php endif; ?>
                             </td>
                             <td><?php echo wp_kses_post($this->money($row['total'])); ?></td>
-                            <td class="sb-mono"><?php echo esc_html($details['manual_wallet'] ?: '—'); ?></td>
+                            <td class="sb-mono"><?php echo esc_html($details['manual_wallet'] !== '' ? BkashProcessor::maskWallet($details['manual_wallet']) : '—'); ?></td>
                         </tr>
                     <?php endforeach; ?>
                 </tbody>
@@ -245,24 +234,24 @@ class BkashReport
     protected function renderTransactions(array $rows, int $total, int $paged): void
     {
         ?>
-        <h2><?php echo esc_html__('Transactions', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></h2>
+        <h2><?php echo esc_html__('Transactions', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></h2>
         <table class="wp-list-table widefat fixed striped">
             <thead>
                 <tr>
-                    <th><?php echo esc_html__('Date', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Order', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Customer', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('bKash TrxID', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Payment ID', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Payer wallet', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Method', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Status', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                    <th><?php echo esc_html__('Amount', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Date', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Order', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Customer', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('bKash TrxID', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Payment ID', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Payer wallet', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Method', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Status', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                    <th><?php echo esc_html__('Amount', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                 </tr>
             </thead>
             <tbody>
                 <?php if (!$rows) : ?>
-                    <tr><td colspan="9" class="sb-empty"><?php echo esc_html__('No bKash transactions match these filters.', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></td></tr>
+                    <tr><td colspan="9" class="sb-empty"><?php echo esc_html__('No bKash transactions match these filters.', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></td></tr>
                 <?php endif; ?>
                 <?php foreach ($rows as $row) : ?>
                     <?php $details = $this->trxDetails($row); ?>
@@ -273,7 +262,7 @@ class BkashReport
                         <td class="sb-mono"><?php echo esc_html($details['trx_id'] ?: '—'); ?></td>
                         <td class="sb-mono"><?php echo esc_html($details['payment_id'] ?: '—'); ?></td>
                         <td class="sb-mono"><?php echo esc_html($details['payer'] ?: '—'); ?></td>
-                        <td><?php echo esc_html($details['manual'] ? __('Manual transfer', 'shaplapay-bkash-payment-gateway-for-fluentcart') : __('API', 'shaplapay-bkash-payment-gateway-for-fluentcart')); ?></td>
+                        <td><?php echo esc_html($details['manual'] ? __('Manual transfer', 'shaplapay-payment-gateway-bkash-fluentcart') : __('API', 'shaplapay-payment-gateway-bkash-fluentcart')); ?></td>
                         <td><?php echo wp_kses_post($this->statusBadge((string) $row['status'])); ?></td>
                         <td><?php echo wp_kses_post($this->money($row['total'])); ?></td>
                     </tr>
@@ -288,16 +277,16 @@ class BkashReport
     {
         ?>
         <div class="sb-panel">
-            <h2><?php echo esc_html__('Refunds', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></h2>
+            <h2><?php echo esc_html__('Refunds', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></h2>
             <?php if (!$rows) : ?>
-                <p class="sb-empty"><?php echo esc_html__('No bKash refunds recorded for these filters.', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></p>
+                <p class="sb-empty"><?php echo esc_html__('No bKash refunds recorded for these filters.', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></p>
             <?php else : ?>
                 <?php if ($total > count($rows)) : ?>
                     <p class="sb-muted">
                         <?php
                         printf(
                             /* translators: %s: number of refunds shown */
-                            esc_html__('Showing the most recent %s refunds.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                            esc_html__('Showing the most recent %s refunds.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                             esc_html(number_format_i18n(count($rows)))
                         );
                         ?>
@@ -306,12 +295,12 @@ class BkashReport
                 <table class="wp-list-table widefat fixed striped">
                     <thead>
                         <tr>
-                            <th><?php echo esc_html__('Date', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                            <th><?php echo esc_html__('Order', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                            <th><?php echo esc_html__('Customer', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                            <th><?php echo esc_html__('bKash refund TrxID', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                            <th><?php echo esc_html__('Status', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
-                            <th><?php echo esc_html__('Amount', 'shaplapay-bkash-payment-gateway-for-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('Date', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('Order', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('Customer', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('bKash refund TrxID', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('Status', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
+                            <th><?php echo esc_html__('Amount', 'shaplapay-payment-gateway-bkash-fluentcart'); ?></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -361,13 +350,13 @@ class BkashReport
     protected function describeRange(array $filters): string
     {
         if ($filters['raw_from'] === '' && $filters['raw_to'] === '') {
-            return __('Showing all dates.', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+            return __('Showing all dates.', 'shaplapay-payment-gateway-bkash-fluentcart');
         }
 
         if ($filters['raw_from'] !== '' && $filters['raw_to'] !== '') {
             return sprintf(
                 /* translators: 1: start date, 2: end date */
-                __('Showing %1$s to %2$s (site time).', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('Showing %1$s to %2$s (site time).', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $filters['raw_from'],
                 $filters['raw_to']
             );
@@ -376,14 +365,14 @@ class BkashReport
         if ($filters['raw_from'] !== '') {
             return sprintf(
                 /* translators: %s: start date */
-                __('Showing from %s (site time).', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('Showing from %s (site time).', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $filters['raw_from']
             );
         }
 
         return sprintf(
             /* translators: %s: end date */
-            __('Showing up to %s (site time).', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            __('Showing up to %s (site time).', 'shaplapay-payment-gateway-bkash-fluentcart'),
             $filters['raw_to']
         );
     }
@@ -696,7 +685,9 @@ class BkashReport
         return [
             'payment_id'       => $paymentId,
             'trx_id'           => $trxId,
-            'payer'            => (string) ($meta['bkash_customer_msisdn'] ?? ''),
+            // Masked again here so rows written before masking was added cannot
+            // surface a full wallet number on screen.
+            'payer'            => BkashProcessor::maskWallet((string) ($meta['bkash_customer_msisdn'] ?? '')),
             'manual'           => !empty($meta['bkash_manual']),
             'manual_wallet'    => (string) ($meta['bkash_manual_wallet'] ?? ''),
             'manual_reference' => (string) ($meta['bkash_manual_reference'] ?? ''),

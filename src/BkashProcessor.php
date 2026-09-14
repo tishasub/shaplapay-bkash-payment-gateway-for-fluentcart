@@ -24,7 +24,7 @@ class BkashProcessor
         if (!$transaction) {
             return new \WP_Error(
                 'bkash_no_transaction',
-                __('No charge transaction found for this order.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                __('No charge transaction found for this order.', 'shaplapay-payment-gateway-bkash-fluentcart')
             );
         }
 
@@ -68,7 +68,7 @@ class BkashProcessor
         if (!$paymentID || !$bkashURL) {
             return new \WP_Error(
                 'bkash_checkout_error',
-                __('Unable to start the bKash payment session. Please try again.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('Unable to start the bKash payment session. Please try again.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $response
             );
         }
@@ -86,7 +86,7 @@ class BkashProcessor
             'status'       => 'success',
             'nextAction'   => 'bkash',
             'actionName'   => 'redirect',
-            'message'      => __('Redirecting to bKash...', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            'message'      => __('Redirecting to bKash...', 'shaplapay-payment-gateway-bkash-fluentcart'),
             'response'     => $response,
             'payment_args' => array_merge($paymentArgs, [
                 'checkout_url' => $bkashURL,
@@ -113,7 +113,7 @@ class BkashProcessor
         if (!$transaction) {
             return [
                 'status'  => 'failed',
-                'message' => __('No charge transaction found for this order.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                'message' => __('No charge transaction found for this order.', 'shaplapay-payment-gateway-bkash-fluentcart'),
             ];
         }
 
@@ -131,7 +131,7 @@ class BkashProcessor
         ]);
 
         if ($order) {
-            $order->payment_method_title = __('bKash (manual transfer)', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+            $order->payment_method_title = __('bKash (manual transfer)', 'shaplapay-payment-gateway-bkash-fluentcart');
             $order->save();
 
             // Same offline order pipeline FluentCart uses for cash on
@@ -212,5 +212,34 @@ class BkashProcessor
     public static function formatAmount($amountInCents): string
     {
         return number_format(((int) $amountInCents) / 100, 2, '.', '');
+    }
+
+    /**
+     * Reduce a wallet number to a masked form such as 017****1234 before it is
+     * stored or displayed. bKash sometimes returns an already masked value, so
+     * anything that is not purely numeric is passed through unchanged rather
+     * than masked twice.
+     */
+    public static function maskWallet($number): string
+    {
+        $number = trim((string) $number);
+
+        if ($number === '') {
+            return '';
+        }
+
+        if (preg_match('/[^0-9+\s-]/', $number) === 1) {
+            return $number;
+        }
+
+        $digits = (string) preg_replace('/[^0-9]/', '', $number);
+
+        if (strlen($digits) < 7) {
+            return $number;
+        }
+
+        return substr($digits, 0, 3)
+            . str_repeat('*', max(3, strlen($digits) - 7))
+            . substr($digits, -4);
     }
 }

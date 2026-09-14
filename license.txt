@@ -1,4 +1,4 @@
-ShaplaPay – bKash Payment Gateway for FluentCart
+ShaplaPay Payment Gateway with bKash for FluentCart
 Copyright (C) 2026 ShaplaPay
 
 This program is free software; you can redistribute it and/or modify

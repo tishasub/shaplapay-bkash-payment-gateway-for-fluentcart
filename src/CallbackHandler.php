@@ -66,8 +66,8 @@ class CallbackHandler
 
         // Customer cancelled or bKash reported a failure at the hosted page.
         $reason = $status === 'cancel'
-            ? __('Payment cancelled at bKash.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
-            : __('Payment failed at bKash.', 'shaplapay-bkash-payment-gateway-for-fluentcart');
+            ? __('Payment cancelled at bKash.', 'shaplapay-payment-gateway-bkash-fluentcart')
+            : __('Payment failed at bKash.', 'shaplapay-payment-gateway-bkash-fluentcart');
 
         $this->markTransactionFailed($transaction, $reason);
         $this->redirectToCheckout($transaction, $reason);
@@ -139,14 +139,14 @@ class CallbackHandler
         if (!$transaction) {
             wp_send_json([
                 'status'  => 'failed',
-                'message' => __('bKash transaction not found.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                'message' => __('bKash transaction not found.', 'shaplapay-payment-gateway-bkash-fluentcart')
             ], 404);
         }
 
         if ($transaction->status === Status::TRANSACTION_SUCCEEDED) {
             wp_send_json([
                 'status'  => 'success',
-                'message' => __('Transaction already confirmed.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                'message' => __('Transaction already confirmed.', 'shaplapay-payment-gateway-bkash-fluentcart')
             ], 200);
         }
 
@@ -155,7 +155,7 @@ class CallbackHandler
                 'status'  => 'failed',
                 'message' => sprintf(
                     /* translators: %s: transaction status */
-                    __('Transaction is in "%s" state and cannot be confirmed.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                    __('Transaction is in "%s" state and cannot be confirmed.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                     $transaction->status
                 )
             ], 422);
@@ -166,7 +166,7 @@ class CallbackHandler
         if (true === $result) {
             wp_send_json([
                 'status'  => 'success',
-                'message' => __('bKash payment confirmed.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                'message' => __('bKash payment confirmed.', 'shaplapay-payment-gateway-bkash-fluentcart')
             ], 200);
         }
 
@@ -187,17 +187,17 @@ class CallbackHandler
         $order = $transaction->order;
 
         if (!$order) {
-            return new \WP_Error('bkash_order_missing', __('Order not found for this transaction.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+            return new \WP_Error('bkash_order_missing', __('Order not found for this transaction.', 'shaplapay-payment-gateway-bkash-fluentcart'));
         }
 
         $storedPaymentID = $this->getStoredPaymentID($transaction);
 
         if (!$storedPaymentID) {
-            return new \WP_Error('bkash_payment_id_missing', __('No bKash payment session found for this transaction.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+            return new \WP_Error('bkash_payment_id_missing', __('No bKash payment session found for this transaction.', 'shaplapay-payment-gateway-bkash-fluentcart'));
         }
 
         if ($paymentID !== '' && $paymentID !== $storedPaymentID) {
-            return new \WP_Error('bkash_payment_id_mismatch', __('bKash payment ID does not match this transaction.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+            return new \WP_Error('bkash_payment_id_mismatch', __('bKash payment ID does not match this transaction.', 'shaplapay-payment-gateway-bkash-fluentcart'));
         }
 
         $api = new BkashApi();
@@ -219,8 +219,8 @@ class CallbackHandler
                     'bkash_not_completed',
                     sprintf(
                         /* translators: %s: bKash transaction status */
-                        __('bKash payment is not completed (status: %s).', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
-                        Arr::get($query, 'transactionStatus', __('unknown', 'shaplapay-bkash-payment-gateway-for-fluentcart'))
+                        __('bKash payment is not completed (status: %s).', 'shaplapay-payment-gateway-bkash-fluentcart'),
+                        Arr::get($query, 'transactionStatus', __('unknown', 'shaplapay-payment-gateway-bkash-fluentcart'))
                     ),
                     $query
                 );
@@ -232,7 +232,7 @@ class CallbackHandler
         if (Arr::get($response, 'transactionStatus') !== 'Completed') {
             return new \WP_Error(
                 'bkash_not_completed',
-                __('bKash payment was not completed.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('bKash payment was not completed.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 $response
             );
         }
@@ -260,7 +260,7 @@ class CallbackHandler
 
             return new \WP_Error(
                 'bkash_amount_mismatch',
-                __('bKash payment amount does not match the order total.', 'shaplapay-bkash-payment-gateway-for-fluentcart')
+                __('bKash payment amount does not match the order total.', 'shaplapay-payment-gateway-bkash-fluentcart')
             );
         }
 
@@ -270,14 +270,14 @@ class CallbackHandler
         $lockKey = 'shaplapay_bkash_confirm_lock_' . $transaction->id;
 
         if (!$this->acquireLock($lockKey)) {
-            return new \WP_Error('bkash_confirm_locked', __('Another confirmation of this payment is already running. Please reload the page.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+            return new \WP_Error('bkash_confirm_locked', __('Another confirmation of this payment is already running. Please reload the page.', 'shaplapay-payment-gateway-bkash-fluentcart'));
         }
 
         try {
             $transaction = OrderTransaction::query()->find($transaction->id);
 
             if (!$transaction) {
-                return new \WP_Error('bkash_transaction_missing', __('Transaction no longer exists.', 'shaplapay-bkash-payment-gateway-for-fluentcart'));
+                return new \WP_Error('bkash_transaction_missing', __('Transaction no longer exists.', 'shaplapay-payment-gateway-bkash-fluentcart'));
             }
 
             $order = $transaction->order;
@@ -295,7 +295,7 @@ class CallbackHandler
                     'bkash_invalid_transaction_status',
                     sprintf(
                         /* translators: %s: transaction status */
-                        __('Transaction is "%s" and cannot be confirmed.', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                        __('Transaction is "%s" and cannot be confirmed.', 'shaplapay-payment-gateway-bkash-fluentcart'),
                         $transaction->status
                     )
                 );
@@ -304,10 +304,13 @@ class CallbackHandler
             $trxID = (string) Arr::get($charge, 'trxID', '');
             $executedAt = Arr::get($charge, 'paymentExecuteTime');
 
+            // Only the fields the store actually needs are kept. The full bKash
+            // response is deliberately not stored: everything meaningful in it
+            // already lives in a dedicated field or column, and keeping the raw
+            // payload would mean silently storing whatever bKash adds later.
             $meta = array_merge($transaction->meta ?: [], [
-                'bkash_trx_id'            => $trxID,
-                'bkash_customer_msisdn'   => Arr::get($charge, 'customerMsisdn', ''),
-                'bkash_execute_response'  => $charge,
+                'bkash_trx_id'          => $trxID,
+                'bkash_customer_msisdn' => BkashProcessor::maskWallet((string) Arr::get($charge, 'customerMsisdn', '')),
             ]);
 
             if ($executedAt && empty($meta['settled_at'])) {
@@ -326,10 +329,10 @@ class CallbackHandler
             $transaction->save();
 
             fluent_cart_add_log(
-                __('bKash Payment Confirmation', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                __('bKash Payment Confirmation', 'shaplapay-payment-gateway-bkash-fluentcart'),
                 sprintf(
                     /* translators: 1: bKash trxID, 2: bKash paymentID */
-                    __('bKash payment completed. TrxID: %1$s, PaymentID: %2$s', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+                    __('bKash payment completed. TrxID: %1$s, PaymentID: %2$s', 'shaplapay-payment-gateway-bkash-fluentcart'),
                     $trxID,
                     $this->getStoredPaymentID($transaction)
                 ),
@@ -351,10 +354,14 @@ class CallbackHandler
      * Tiny mutex on top of the options table. add_option() fails when the row
      * already exists, which makes the insert atomic across requests. A lock
      * older than two minutes is treated as leftovers from a killed request.
+     * Every acquired key is also listed in an index option so uninstall can
+     * enumerate the leftovers through the Options API instead of SQL.
      */
     protected function acquireLock(string $key): bool
     {
         if (add_option($key, time(), '', 'no')) {
+            $this->trackLock($key);
+
             return true;
         }
 
@@ -362,8 +369,13 @@ class CallbackHandler
 
         if ($heldSince > 0 && (time() - $heldSince) > 120) {
             delete_option($key);
+            delete_option(self::LOCK_INDEX_OPTION);
 
-            return add_option($key, time(), '', 'no');
+            if (add_option($key, time(), '', 'no')) {
+                $this->trackLock($key);
+
+                return true;
+            }
         }
 
         return false;
@@ -372,6 +384,46 @@ class CallbackHandler
     protected function releaseLock(string $key): void
     {
         delete_option($key);
+        $this->untrackLock($key);
+    }
+
+    /**
+     * Index of lock option names this plugin has ever created. Read at
+     * uninstall time to clean up leftover rows without any direct SQL.
+     */
+    const LOCK_INDEX_OPTION = 'shaplapay_bkash_confirm_locks';
+
+    protected function trackLock(string $key): void
+    {
+        $index = get_option(self::LOCK_INDEX_OPTION, []);
+
+        if (!is_array($index)) {
+            $index = [];
+        }
+
+        if (!in_array($key, $index, true)) {
+            $index[] = $key;
+            update_option(self::LOCK_INDEX_OPTION, array_slice($index, -200), 'no');
+        }
+    }
+
+    protected function untrackLock(string $key): void
+    {
+        $index = get_option(self::LOCK_INDEX_OPTION, []);
+
+        if (!is_array($index) || !in_array($key, $index, true)) {
+            return;
+        }
+
+        $index = array_values(array_diff($index, [$key]));
+
+        if (!$index) {
+            delete_option(self::LOCK_INDEX_OPTION);
+
+            return;
+        }
+
+        update_option(self::LOCK_INDEX_OPTION, $index, 'no');
     }
 
     protected function getStoredPaymentID(OrderTransaction $transaction): string
@@ -396,7 +448,7 @@ class CallbackHandler
         $transaction->update(['status' => Status::TRANSACTION_FAILED]);
 
         fluent_cart_error_log(
-            __('Payment Failed', 'shaplapay-bkash-payment-gateway-for-fluentcart'),
+            __('Payment Failed', 'shaplapay-payment-gateway-bkash-fluentcart'),
             'Payment Failed Reason: ' . $reason,
             ['module_name' => 'Order', 'module_id' => $transaction->order_id]
         );

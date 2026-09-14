@@ -1,0 +1,21 @@
+/**
+ * ShaplaPay Payment Gateway with bKash for FluentCart
+ * Styles for the manual transfer notice on the order confirmation page.
+ */
+
+.shaplapay-bkash-manual { max-width: 620px; margin: 16px auto 0; padding: 16px; border: 1px solid #e2136e33; border-left: 4px solid #e2136e; border-radius: 4px; background: #fff9fc; font-size: 14px; color: #2f3448; }
+.shaplapay-bkash-manual h3 { margin: 0 0 8px; font-size: 16px; }
+.shaplapay-bkash-manual p { margin: 0 0 12px; }
+.shaplapay-bkash-manual-details { width: 100%; border-collapse: collapse; margin: 0 0 12px; }
+.shaplapay-bkash-manual-details th,
+.shaplapay-bkash-manual-details td { text-align: left; padding: 6px 0; border-bottom: 1px solid #f0e2ea; vertical-align: top; }
+.shaplapay-bkash-manual-details th { font-weight: 600; width: 45%; }
+.shaplapay-bkash-manual-code { font-family: Menlo, Consolas, monospace; word-break: break-all; }
+.shaplapay-bkash-manual-flag { padding: 8px 12px; border-radius: 4px; margin: 0 0 12px; }
+.shaplapay-bkash-manual-flag.is-success { background: #edfaef; color: #008a20; }
+.shaplapay-bkash-manual-flag.is-error { background: #fcf0f1; color: #d63638; }
+.shaplapay-bkash-manual-hint { font-size: 13px; color: #646970; margin: 0 0 8px; }
+.shaplapay-bkash-manual-note { margin: 0; }
+.shaplapay-bkash-manual-form-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.shaplapay-bkash-manual-input { flex: 1 1 200px; padding: 8px 10px; border: 1px solid #c3c4c7; border-radius: 4px; }
+.shaplapay-bkash-manual-button { padding: 8px 16px; border: 0; border-radius: 4px; background: #e2136e; color: #fff; cursor: pointer; }
