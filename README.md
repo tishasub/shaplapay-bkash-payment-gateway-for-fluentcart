@@ -99,18 +99,21 @@ PHP prefix: `ShaplaPayBkash`. Constants: `SHAPLAPAY_BKASH_*`. Text domain: `shap
 
 | File | Size | Status |
 |---|---|---|
-| `banner-1544x500.png` | 1544 × 500 | included |
-| `banner-772x250.png` | 772 × 250 | included |
-| `icon-128x128.png` | 128 × 128 | included |
-| `icon-256x256.png` | 256 × 256 | included |
-| `screenshot-1.png` | any | **to add** — capture the FluentCart checkout showing bKash, or the bKash reports screen |
+| `banner-1544x500.png` | 1544 × 500 | included — FluentCart + ShaplaPay + bKash banner |
+| `banner-772x250.png` | 772 × 250 | included — same artwork, small size |
+| `icon-128x128.png` | 128 × 128 | included — ShaplaPay lotus mark |
+| `icon-256x256.png` | 256 × 256 | included — same mark, retina size |
+| `screenshot-1.png` | 1200 wide | included — bKash on the FluentCart checkout |
+| `screenshot-2.png` | 1200 wide | included — gateway settings screen |
+| `screenshot-3.png` | 1200 wide | included — manual transfer confirmation on the receipt page |
 
 ## Releases
 
 The version lives in two places and both must match: the `Version:` plugin header and `Stable tag:` in `readme.txt`.
 
-- Pushing a tag (`1.0.4`) runs `.github/workflows/deploy-to-wordpress-org.yml`, which lints the PHP, assembles a clean build using `.distignore`, and deploys it to WordPress.org SVN.
+- Pushing a tag (`1.0.4`) runs `.github/workflows/deploy-to-wordpress-org.yml`, which checks that the tag matches the plugin header and `Stable tag`, lints the PHP, assembles a clean build using `.distignore`, and deploys it to WordPress.org SVN.
 - Pushing to `main` with changes to `readme.txt` or `.wordpress-org/**` runs `.github/workflows/update-wordpress-org-assets.yml` to sync the listing assets.
+- Either workflow can also be started by hand from the **Actions** tab (Run workflow). The deploy workflow accepts an optional tag name input and runs as a dry run by default; select "Deploy for real" to publish to WordPress.org.
 
 Both workflows skip deployment and print a notice until `SVN_USERNAME` and `SVN_PASSWORD` are set under **Settings → Secrets and variables → Actions**.
 

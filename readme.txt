@@ -114,6 +114,12 @@ No. bKash only settles in Bangladeshi Taka, so the gateway hides itself on store
 
 On the order screen in FluentCart: the bKash transaction ID is written to the order activity log, and both the transaction ID and a masked payer wallet number are stored with the transaction. The bKash reports screen also lists the transaction ID and masked wallet.
 
+== Screenshots ==
+
+1. bKash selected on the FluentCart checkout, with the manual wallet transfer notice shown under the payment option.
+2. Gateway settings: Connection mode, Payment confirmation, notice placement, and the Live and Sandbox credential tabs.
+3. Manual transfer confirmation on the receipt page: exact amount, wallet number and order reference, with a field for the customer to submit the bKash Transaction ID.
+
 == Changelog ==
 
 = 1.0.4 =

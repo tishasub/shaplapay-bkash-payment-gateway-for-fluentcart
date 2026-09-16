@@ -6,11 +6,16 @@ on:
       - '*'
   workflow_dispatch:
     inputs:
-      dry_run:
-        description: 'Dry run (build everything, skip the final SVN commit)'
+      tag:
+        description: 'Tag to deploy (default: the Stable tag in readme.txt)'
+        type: string
+        required: false
+        default: ''
+      live_run:
+        description: 'Deploy for real (otherwise dry run only)'
         type: boolean
         required: false
-        default: true
+        default: false
 
 env:
   SLUG: shaplapay-payment-gateway-bkash-fluentcart
@@ -28,6 +33,30 @@ jobs:
         with:
           php-version: '8.3'
           coverage: none
+
+      - name: Resolve version to deploy
+        id: version
+        run: |
+          if [ -n "${{ github.ref_name }}" ] && [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            VERSION="${{ inputs.tag }}"
+          else
+            VERSION="$(awk '/^Stable tag:/{print $3}' readme.txt)"
+          fi
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Deploying version: $VERSION"
+
+      - name: Check tag matches the plugin headers
+        run: |
+          HEADER="$(grep -m1 -E '^\s*\*\s*Version:' shaplapay-payment-gateway-bkash-fluentcart.php | grep -oE '[0-9]+\.[0-9]+\.[0-9]+')"
+          STABLE="$(awk '/^Stable tag:/{print $3}' readme.txt)"
+          VERSION="${{ steps.version.outputs.version }}"
+          if [ "$VERSION" != "$HEADER" ] || [ "$VERSION" != "$STABLE" ]; then
+            echo "::error::Version mismatch — tag/input: $VERSION, plugin header: $HEADER, Stable tag: $STABLE. Keep all three in sync."
+            exit 1
+          fi
 
       - name: Lint PHP files
         run: find . -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
@@ -47,7 +76,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ env.SLUG }}-${{ github.ref_name }}
+          name: ${{ env.SLUG }}-${{ steps.version.outputs.version }}
           path: |
             ${{ runner.temp }}/built
             ${{ runner.temp }}/${{ env.SLUG }}.zip
@@ -61,10 +90,23 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Resolve version to deploy
+        id: version
+        run: |
+          if [ -n "${{ github.ref_name }}" ] && [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            VERSION="${{ inputs.tag }}"
+          else
+            VERSION="$(awk '/^Stable tag:/{print $3}' readme.txt)"
+          fi
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Download built plugin
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.SLUG }}-${{ github.ref_name }}
+          name: ${{ env.SLUG }}-${{ steps.version.outputs.version }}
           path: .
 
       - name: Check SVN credentials are configured
@@ -73,20 +115,16 @@ jobs:
           HAS_CREDS: ${{ secrets.SVN_USERNAME != '' }}
         run: echo "has_creds=$HAS_CREDS" >> "$GITHUB_OUTPUT"
 
-      - name: Resolve version for manual runs
-        if: github.event_name == 'workflow_dispatch'
-        run: echo "VERSION=$(awk '/^Stable tag:/{print $3}' readme.txt)" >> "$GITHUB_ENV"
-
       - name: WordPress Plugin Deploy
         if: steps.creds.outputs.has_creds == 'true'
         uses: 10up/action-wordpress-plugin-deploy@2.3.0
         with:
-          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.live_run != true }}
         env:
           SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
           SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
           BUILD_DIR: built
-          VERSION: ${{ env.VERSION || github.ref_name }}
+          VERSION: ${{ steps.version.outputs.version }}
 
       - name: Skipped — SVN credentials not configured
         if: steps.creds.outputs.has_creds != 'true'
